@@ -1,6 +1,5 @@
 #!/bin/bash -ue
 # Script for packaging all the job server files to .tar.gz for Mesos or other single-image deploys
-WORK_DIR=/tmp/job-server
 
 if [ "$#" -ne 1 ]; then
   echo "Syntax: ${0} <Environment>"
@@ -35,6 +34,15 @@ else
 fi
 set -u
 
+WORK_DIR=$(mktemp -d)
+FILE_DIR="$WORK_DIR/spark-job-server-${ENV}"
+TAR_FILE="spark-job-server-${ENV}.tar.gz"
+
+function finish {
+    rm -Rf "${WORK_DIR}"
+}
+trap finish EXIT
+
 echo "Packaging job-server for environment ${ENV}..."
 
 pushd "${bin}/.." > /dev/null
@@ -53,16 +61,12 @@ pushd "${bin}/.." > /dev/null
          config/shiro.ini
          config/log4j-server.properties"
 
-  rm -rf $WORK_DIR
-  mkdir -p $WORK_DIR
-  cp ${FILES} "${WORK_DIR}/"
-  cp "${configFile}" "${WORK_DIR}/settings.sh"
+  mkdir -p "$FILE_DIR"
+  cp $FILES "$FILE_DIR"/
+  cp "$configFile" "$FILE_DIR"/settings.sh
 popd > /dev/null
 
-pushd "${WORK_DIR}" > /dev/null
-  TAR_FILE="${WORK_DIR}/job-server.tar.gz"
-  rm -f "${TAR_FILE}"
-  tar zcvf "${TAR_FILE}" ./*
-popd > /dev/null
+rm -f "${TAR_FILE}"
+tar zcvf "$TAR_FILE" -C "$WORK_DIR" "spark-job-server-${ENV}/"
 
 echo "Created distribution at ${TAR_FILE}"
