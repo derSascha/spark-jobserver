@@ -175,10 +175,12 @@ class AkkaClusterSupervisorActor(daoActor: ActorRef) extends InstrumentedActor {
       daoActor, Some(resultActor)))(Timeout(timeoutSecs.second)).onComplete {
       case Failure(e:Exception) =>
         logger.info("Failed to send initialize message to context " + ref, e)
+        cluster.down(ref.path.address)
         ref ! PoisonPill
         failureFunc(e)
       case Success(JobManagerActor.InitError(t)) =>
         logger.info("Failed to initialize context " + ref, t)
+        cluster.down(ref.path.address)
         ref ! PoisonPill
         failureFunc(t)
       case Success(JobManagerActor.Initialized(ctxName, resActor)) =>
@@ -187,6 +189,7 @@ class AkkaClusterSupervisorActor(daoActor: ActorRef) extends InstrumentedActor {
         context.watch(ref)
         successFunc(ref)
       case _ => logger.info("Failed for unknown reason.")
+        cluster.down(ref.path.address)
         ref ! PoisonPill
         failureFunc(new RuntimeException("Failed for unknown reason."))
     }
