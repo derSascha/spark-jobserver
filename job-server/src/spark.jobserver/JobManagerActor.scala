@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import ooyala.common.akka.InstrumentedActor
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.{SparkConf, SparkContext, SparkEnv}
+import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationEnd}
 import org.joda.time.DateTime
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -67,7 +68,7 @@ object JobManagerActor {
  *   }
  * }}}
  */
-class JobManagerActor(contextConfig: Config) extends InstrumentedActor {
+class JobManagerActor(contextConfig: Config) extends InstrumentedActor with SparkListener {
 
   import CommonMessages._
   import JobManagerActor._
@@ -108,6 +109,12 @@ class JobManagerActor(contextConfig: Config) extends InstrumentedActor {
     Option(jobContext).foreach(_.stop())
   }
 
+  // Handle external kill events (e.g. killed via YARN)
+  override def onApplicationEnd(event: SparkListenerApplicationEnd) {
+    logger.info("Got Spark Application end event, stopping job manger.")
+    self ! PoisonPill
+  }
+
   def wrappedReceive: Receive = {
     case Initialize(dao, resOpt) =>
       daoActor = dao
@@ -120,6 +127,7 @@ class JobManagerActor(contextConfig: Config) extends InstrumentedActor {
           jarLoader.addURL(new URL(convertJarUriSparkToJava(jarUri)))
         }
         jobContext = createContextFromConfig()
+        jobContext.sparkContext.addSparkListener(this)
         sparkEnv = SparkEnv.get
         jobCache = new JobCache(jobCacheSize, daoActor, jobContext.sparkContext, jarLoader)
         getSideJars(contextConfig).foreach { jarUri => jobContext.sparkContext.addJar(jarUri) }
