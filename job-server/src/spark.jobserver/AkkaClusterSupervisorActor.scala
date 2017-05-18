@@ -91,12 +91,11 @@ class AkkaClusterSupervisorActor(daoActor: ActorRef) extends InstrumentedActor {
              initContext(actorName, actorRef, contextInitTimeout)(isAdHoc, successFunc, failureFunc)
            }).getOrElse({
             logger.warn("No initialization or callback found for jobManager actor {}", actorRef.path)
+            cluster.down(actorRef.path.address)
             actorRef ! PoisonPill
-
           })
         }
       }
-
 
     case AddContextsFromConfig =>
       addContextsFromConfig(config)
