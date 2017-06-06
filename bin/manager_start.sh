@@ -38,12 +38,14 @@ if [ ! -z $5 ]; then
   --conf "spark.executor.extraJavaOptions=$LOGGING_OPTS"
   --proxy-user $5
   $MESOS_OPTS
-  --driver-java-options "$GC_OPTS $JAVA_OPTS $LOGGING_OPTS $CONFIG_OVERRIDES"
+  $SPARK_SUBMIT_OPTIONS
+  --driver-java-options "$GC_OPTS $JAVA_OPTS $LOGGING_OPTS $CONFIG_OVERRIDES $SPARK_SUBMIT_JAVA_OPTIONS"
   $appdir/spark-job-server.jar $2 $3 $4 $conffile'
 else
   cmd='$SPARK_HOME/bin/spark-submit --class $MAIN --driver-memory $JOBSERVER_MEMORY
   --conf "spark.executor.extraJavaOptions=$LOGGING_OPTS"
-  --driver-java-options "$GC_OPTS $JAVA_OPTS $LOGGING_OPTS $CONFIG_OVERRIDES"
+  $SPARK_SUBMIT_OPTIONS
+  --driver-java-options "$GC_OPTS $JAVA_OPTS $LOGGING_OPTS $CONFIG_OVERRIDES $SPARK_SUBMIT_JAVA_OPTIONS"
   $MESOS_OPTS
   $appdir/spark-job-server.jar $2 $3 $4 $conffile'
 fi
