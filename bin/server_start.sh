@@ -43,6 +43,11 @@ if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE"); then
    exit 1
 fi
 
+# Start Kerberos ticket renewer if necessary
+if [ -n "$JOBSERVER_KEYTAB" ] ; then
+  "$appdir"/kerberos-ticket-renewer.sh 2>&1 >>"$LOG_DIR"/kerberos-ticket-renewer.log </dev/null &
+fi
+
 cmd='$SPARK_HOME/bin/spark-submit --class $MAIN --driver-memory $JOBSERVER_MEMORY
   --conf "spark.executor.extraJavaOptions=$LOGGING_OPTS"
   $SPARK_SUBMIT_OPTIONS
