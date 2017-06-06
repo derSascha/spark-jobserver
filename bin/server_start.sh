@@ -25,22 +25,29 @@ GC_OPTS="-XX:+UseConcMarkSweepGC
          -XX:MaxPermSize=512m
          -XX:+CMSClassUnloadingEnabled "
 
+JAVA_OPTS="-XX:MaxDirectMemorySize=$MAX_DIRECT_MEMORY \
+           -XX:+HeapDumpOnOutOfMemoryError -Djava.net.preferIPv4Stack=true"
+
 # To truly enable JMX in AWS and other containerized environments, also need to set
 # -Djava.rmi.server.hostname equal to the hostname in that environment.  This is specific
 # depending on AWS vs GCE etc.
-JAVA_OPTS="-XX:MaxDirectMemorySize=$MAX_DIRECT_MEMORY \
-           -XX:+HeapDumpOnOutOfMemoryError -Djava.net.preferIPv4Stack=true \
-           -Dcom.sun.management.jmxremote.port=$JMX_PORT \
-           -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT \
-           -Dcom.sun.management.jmxremote.authenticate=false \
-           -Dcom.sun.management.jmxremote.ssl=false"
+# JAVA_OPTS="${JAVA_OPTS} \
+#            -Dcom.sun.management.jmxremote.port=$JMX_PORT \
+#            -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT \
+#            -Dcom.sun.management.jmxremote.authenticate=false \
+#            -Dcom.sun.management.jmxremote.ssl=false"
 
 MAIN="spark.jobserver.JobServer"
 
 PIDFILE=$appdir/spark-jobserver.pid
-if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE"); then
+if [ -f "$PIDFILE" ] && kill -0 $(cat "$PIDFILE") >/dev/null 2>&1 ; then
    echo 'Job server is already running'
    exit 1
+fi
+
+buildVersionFile="$appdir/build.version"
+if [ -f "$buildVersionFile" ] ; then
+  echo "BUILD-VERSION: $(cat $buildVersionFile)" >>"$LOG_DIR/spark-job-server.log"
 fi
 
 # Start Kerberos ticket renewer if necessary
