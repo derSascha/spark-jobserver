@@ -23,7 +23,11 @@ class NamedObjectsSpec extends TestKit(ActorSystem("NamedObjectsSpec")) with Fun
   private var sc : SparkContext = _
   private var sqlContext : SQLContext = _
   private var namedObjects: NamedObjects = _
-  
+
+  before {
+    namedObjects.getNames().foreach { namedObjects.forget }
+  }
+
   override def beforeAll {
     sc = new SparkContext("local[3]", getClass.getSimpleName, new SparkConf)
     sqlContext = new SQLContext(sc)
@@ -115,6 +119,13 @@ class NamedObjectsSpec extends TestKit(ActorSystem("NamedObjectsSpec")) with Fun
       })(FiniteDuration(1234, MILLISECONDS), dataFramePersister)
       generatorCalled should equal(false)
       df2 should equal(df1)
+    }
+
+    it("getOrElseCreate() should fail with force computation and storage level none") {
+      val df = NamedDataFrame(sqlContext.createDataFrame(rows, struct), true, StorageLevel.NONE)
+      intercept[IllegalArgumentException] {
+        namedObjects.getOrElseCreate("df", df)
+      }
     }
 
     it("update() should not be bothered by different object types") {

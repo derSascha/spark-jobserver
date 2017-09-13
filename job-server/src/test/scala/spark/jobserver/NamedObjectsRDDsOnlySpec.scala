@@ -88,6 +88,13 @@ class NamedObjectsRDDsOnlySpec extends TestKit(ActorSystem("NamedObjectsSpec")) 
       rdd2 should equal(rdd)
     }
 
+    it("getOrElseCreate() should fail with force computation and storage level none") {
+      val rdd = NamedRDD(sc.parallelize(Seq(1, 2, 3)), true, StorageLevel.NONE)
+      intercept[IllegalArgumentException] {
+        namedObjects.getOrElseCreate("rdd", rdd)
+      }
+    }
+
     it("update() should replace existing RDD") {
       val rdd1 = sc.parallelize(Seq(1, 2, 3))
       val rdd2 = sc.parallelize(Seq(4, 5, 6))
