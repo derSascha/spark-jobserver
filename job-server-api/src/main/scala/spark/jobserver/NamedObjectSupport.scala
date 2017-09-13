@@ -17,12 +17,6 @@ abstract class NamedObjectPersister[O <: NamedObject] {
   def persist(namedObj: O, name: String): Unit
 
   /**
-   * update reference to named object so that it does not get GCed
-   * @param namedObject - reference to this object is to be refreshed
-   */
-  def refresh(namedObject: O): O
-
-  /**
    * unpersist the given object
    * @param namedObject - object to be unpersisted
    */

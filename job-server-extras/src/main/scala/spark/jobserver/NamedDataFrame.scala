@@ -34,16 +34,4 @@ class DataFramePersister extends NamedObjectPersister[NamedDataFrame] {
         df.unpersist(blocking = false)
     }
   }
-
-  /**
-   * Calls df.persist(), which updates the DataFrame's cached timestamp, meaning it won't get
-   * garbage collected by Spark for some time.
-   * @param namedDF the NamedDataFrame to refresh
-   */
-  override def refresh(namedDF: NamedDataFrame): NamedDataFrame = namedDF match {
-    case NamedDataFrame(df, _, storageLevel) =>
-      df.persist(storageLevel)
-      namedDF
-  }
-
 }

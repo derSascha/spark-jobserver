@@ -19,11 +19,4 @@ class BroadcastPersister[T] extends NamedObjectPersister[NamedBroadcast[T]] {
         broadcast.unpersist(blocking = false)
     }
   }
-  /**
-    * @param namedBroadcast the NamedBroadcast to refresh
-    */
-  override def refresh(namedBroadcast: NamedBroadcast[T]): NamedBroadcast[T] = namedBroadcast match {
-    case NamedBroadcast(broadcast) =>
-      namedBroadcast
-  }
 }

@@ -29,17 +29,6 @@ class RDDPersister[T] extends NamedObjectPersister[NamedRDD[T]] {
     }
   }
 
-  /**
-   * Calls rdd.persist(), which updates the RDD's cached timestamp, meaning it won't get
-   * garbage collected by Spark for some time.
-   * @param rdd the RDD
-   */
-  override def refresh(namedRDD: NamedRDD[T]): NamedRDD[T] = namedRDD match {
-    case NamedRDD(rdd, _, _) =>
-      rdd.persist(rdd.getStorageLevel)
-      namedRDD
-  }
-
   override def unpersist(namedRDD: NamedRDD[T]) {
     namedRDD match {
       case NamedRDD(rdd, _, _) =>
